@@ -13,7 +13,7 @@ pairwise.probabilities(x, parallel = TRUE)
 }
 \arguments{
 \item{x}{An object of class \code{shallot.samples.raw} when supplied to \code{\link{pairwise.probabilities}} or an object of class \code{shallot.pairwiseProbability} when supplied to \code{\link{print}} and \code{\link{as.matrix}}.}
-\item{parallel}{Should sampling be done in parallel by simultaneously using all CPU cores?}
+\item{parallel}{Should all of the CPU cores should be used?  Defaults to \code{TRUE}.}
 \item{...}{Currently ignored.}
 }
 \details{
@@ -28,8 +28,8 @@ The \code{\link[=as.matrix.shallot.pairwiseProbability]{as.matrix}} function ret
 }
 \author{David B. Dahl \email{dahl@stat.byu.edu}}
 \seealso{
-\code{\link{sample.partition}},
-\code{\link{process.partition}},
+\code{\link{sample.partitions}},
+\code{\link{process.samples}},
 \code{\link{estimate.partition}}
 }
 \examples{

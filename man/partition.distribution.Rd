@@ -12,7 +12,7 @@
 \alias{print.shallot.distribution.ddcrp}
 \title{Distribution}
 \description{
-  These functions specify the Ewens, Ewens-Pitman, Ewens attraction, Ewens-Pitman attraction, and ddCRP distributions which would then be used in the \code{\link{sample.partition} function.}
+  These functions specify the Ewens, Ewens-Pitman, Ewens attraction, Ewens-Pitman attraction, and ddCRP distributions which would then be used in the \code{\link{sample.partitions} function.}
 }
 \usage{
 ewens(mass,n.items,names = paste0("c", 1:n.items))
@@ -31,7 +31,7 @@ ddcrp(mass, attraction)
 \item{discount}{An object of class \code{shallot.discount}.}
 \item{attraction}{An object of class \code{shallot.attraction}.}
 \item{n.items}{An integer containing the number of items to partition.}
-\item{names}{An character vector containing the names of the items.  The default names are of the form \dQuote{c1}, \dQuote{c2}, etc.}
+\item{names}{A character vector containing the names of the items.  The default names are of the form \dQuote{c1}, \dQuote{c2}, etc.}
 \item{x}{An object of class \code{shallot.distribution}.}
 \item{...}{Currently ignored.}
 }
@@ -43,7 +43,7 @@ An object of class \code{shallot.distribution}.
 \code{\link{mass}},
 \code{\link{discount}},
 \code{\link{attraction}},
-\code{\link{sample.partition}}
+\code{\link{sample.partitions}}
 }
 \references{
 \href{https://doi.org/10.1080/01621459.2016.1165103}{Dahl, D. B., Day, R., and Tsai, J. (2017), Random Partition Distribution Indexed by Pairwise Information, \emph{Journal of the American Statistical Association}, accepted. <DOI:10.1080/01621459.2016.1165103>}
