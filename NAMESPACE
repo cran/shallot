@@ -1,5 +1,6 @@
 import(rscala)
 import(commonsMath)
+import(sdols)
 import(stats)
 
 importFrom("grDevices", "heat.colors", "rainbow", "topo.colors")
@@ -22,17 +23,14 @@ export(ewens.pitman.attraction)
 export(ddcrp)
 export(pairwise.probabilities)
 export(estimate.partition)
-export(confidence)
 export(nsubsets.random)
 export(nsubsets.probability)
 export(nsubsets.average)
 export(nsubsets.variance)
 export(sample.partitions)
-export(sample.partitions.posterior)
 export(process.samples)
 export(enumerate.partitions)
 export(partition.pmf)
-export(sampling.model)
 
 S3method("print", "shallot.mass")
 S3method("print", "shallot.discount")
@@ -51,6 +49,4 @@ S3method("print", "shallot.pairwiseProbability")
 
 S3method("as.matrix", "shallot.attraction")
 S3method("as.matrix", "shallot.pairwiseProbability")
-
-S3method("plot", "shallot.confidence")
 
