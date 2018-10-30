@@ -136,7 +136,7 @@ permutation <- function(...,n.items=NULL,fixed=TRUE) {
 }
 
 .permutation <- function(permutation) {
-  s$.Permutation.apply(permutation$value-1L)
+  s$.Permutation(permutation$value-1L)
 }
 
 .permutationFactory <- function(permutation) {
@@ -303,7 +303,7 @@ attraction <- function(permutation, decay) {
 }
 
 .distance <- function(distance) {
-  s$.Distance.apply(as.matrix(distance),FALSE)
+  s$.Distance(as.matrix(distance),FALSE)
 }
 
 .attraction <- function(attraction) {
@@ -311,7 +311,7 @@ attraction <- function(permutation, decay) {
     s$.Attraction.constant(attraction$n.items)
   } else {
     tryCatch(
-      s$.Attraction.apply(.distance(as.matrix(attraction$decay$distance)),.permutation(attraction$permutation),.decay(attraction$decay))
+      s$.Attraction(.distance(as.matrix(attraction$decay$distance)),.permutation(attraction$permutation),.decay(attraction$decay))
     ,error = function(e) stop("Attraction is invalid because 'distance' and 'decay' appear to be incompatible.  Perhaps lower the 'temperature'."))
   }
 }
@@ -576,7 +576,7 @@ nsubsets.variance <- function(x) {
 # Sample for partition distributions.
 .ewens <- function(x, samplingModel=.nullModel()) {
   mass <- .mass(x$mass)
-  s$.Ewens.apply(samplingModel,mass)
+  s$.Ewens(samplingModel,mass)
 }
 
 .sample.ewens <- function(nItems, massFactory) s(nItems=as.integer(nItems[1]),massFactory=massFactory) ^ '
@@ -588,7 +588,7 @@ nsubsets.variance <- function(x) {
 .ewensPitman <- function(x, samplingModel=.nullModel()) {
   mass <- .mass(x$mass)
   discount <- .discount(x$discount)
-  s$.EwensPitman.apply(samplingModel,mass,discount)
+  s$.EwensPitman(samplingModel,mass,discount)
 }
 
 .sample.ewensPitman <- function(nItems, massFactory, discountFactory) s(nItems=as.integer(nItems[1]),massFactory=massFactory,discountFactory=discountFactory) ^ '
@@ -600,7 +600,7 @@ nsubsets.variance <- function(x) {
 .ewensAttraction <- function(x, samplingModel=.nullModel()) {
   mass <- .mass(x$mass)
   attraction <- .attraction(x$attraction)
-  s$.EwensAttraction.apply(samplingModel,mass,attraction)
+  s$.EwensAttraction(samplingModel,mass,attraction)
 }
 
 .sample.ewensAttraction <- function(nItems, massFactory, attractionFactory) s(nItems=as.integer(nItems[1]),massFactory=massFactory,attractionFactory=attractionFactory) ^ '
@@ -613,7 +613,7 @@ nsubsets.variance <- function(x) {
   mass <- .mass(x$mass)
   discount <- .discount(x$discount)
   attraction <- .attraction(x$attraction)
-  s$.EwensPitmanAttraction.apply(samplingModel,mass,discount,attraction)
+  s$.EwensPitmanAttraction(samplingModel,mass,discount,attraction)
 }
 
 .sample.ewensPitmanAttraction <- function(nItems, massFactory, discountFactory, attractionFactory) s(nItems=as.integer(nItems[1]), massFactory=massFactory, discountFactory=discountFactory, attractionFactory=attractionFactory) ^ '
@@ -670,6 +670,142 @@ print.shallot.samples.full <- function(x, ...) {
 }
 
 
+
+# Posterior simulation via MCMC.
+sample.partitions.posterior <- function(partition, sampling.model, partition.model, n.draws, massRWSD=0.5, discountRWSD=0.1, k=min(length(partition),25), temperatureRWSD=0.5, progress.bar=interactive()) {
+  pmR <- partition.model
+  sampler <- function(p=s$".null_Partition[org.ddahl.rscala.RObject]"(),
+                      sm=s$".null_SamplingModel[org.ddahl.rscala.RObject]"(),
+                      pm=s$".PartitionModel[org.ddahl.rscala.RObject]"(),
+                      pmType="",
+                      rdg=s$".null_RDG"(),
+                      progressBar, showProgressBar=TRUE) s(p=p,sm=sm,pm=pm,pmType=pmType,rdg=rdg,progressBar=progressBar,showProgressBar=showProgressBar) ^ '
+    val nDraws = R.evalI0("as.integer(n.draws[1])")
+    val k = R.evalI0("as.integer(k[1])")
+    val massRWSD = R.evalD0("as.double(massRWSD[1])")
+    val discountRWSD = R.evalD0("as.double(discountRWSD[1])")
+    val temperatureRWSD = R.evalD0("as.double(temperatureRWSD[1])")
+    val updateMass = R.evalL0("identical(pmR$mass$fixed,FALSE)")
+    val monitorMass = AcceptanceRateMonitor()
+    val (massShape, massRate) = if ( updateMass ) {
+      (R.evalD0("pmR$mass$shape"), R.evalD0("pmR$mass$rate"))
+    } else (0.0, 0.0)
+    val updateDiscount = R.evalL0("identical(pmR$discount$fixed,FALSE)")
+    val monitorDiscount = AcceptanceRateMonitor()
+    val (discountShape1, discountShape2) = if ( updateDiscount ) {
+      ( R.evalD0("pmR$discount$shape1"), R.evalD0("pmR$discount$shape2") )
+    } else (0.0, 0.0)
+    val updatePermutation = R.evalL0("identical(pmR$attraction$permutation$fixed,FALSE)")
+    val monitorPermutation = AcceptanceRateMonitor()
+    val updateTemperature = R.evalL0("identical(pmR$attraction$decay$temperature$fixed,FALSE)")
+    val monitorTemperature = AcceptanceRateMonitor()
+    val (temperatureShape, temperatureRate) = if ( updateTemperature ) {
+      (R.evalD0("pmR$attraction$decay$temperature$shape"), R.evalD0("pmR$attraction$decay$temperature$rate"))
+    } else (0.0, 0.0)
+    abstract class Sampler {
+      protected var _partition = p
+      def partition = _partition
+      def hyperparameters: Array[Double]
+      def labels: Array[String]
+      def next(): Unit
+    }
+    val sampler: Sampler = pmType match {
+      case "org.ddahl.shallot.distribution.EwensPitmanAttraction[org.ddahl.rscala.RObject]" => new Sampler {
+          var _distribution = pm.asInstanceOf[org.ddahl.shallot.distribution.EwensPitmanAttraction[org.ddahl.rscala.RObject]]
+          def next() = {
+            _partition = AuxiliaryGibbsSampler(_partition, sm, _distribution, rdg)._1
+            if ( updateMass ) 
+              _distribution = monitorMass(MassSampler.gaussianRandomWalk(_distribution, _partition, massShape, massRate, massRWSD, rdg))
+            if ( updateDiscount ) {
+              _distribution = monitorDiscount(DiscountSampler.gaussianRandomWalk(
+                                  _distribution, _partition, discountShape1, discountShape2, discountRWSD, rdg))
+            }
+            if ( updatePermutation ) {
+              _distribution = monitorPermutation(PermutationSampler.update(_distribution, _partition, k, rdg, Set()))
+            }
+            if ( updateTemperature ) {
+              _distribution = monitorTemperature(TemperatureSampler.gaussianRandomWalk(
+                                  _distribution, _partition, temperatureShape, temperatureRate, temperatureRWSD, rdg))
+            }
+          }
+          def hyperparameters = Array(_distribution.mass.value, _distribution.discount.value, _distribution.attraction.decay.temperature,
+                                      monitorMass.rate, monitorDiscount.rate, monitorPermutation.rate, monitorTemperature.rate)
+          def labels = Array("mass","discount","temperature","rate.mass","rate.discount","rate.permutation","rate.temperature")
+        }
+      case "org.ddahl.shallot.distribution.EwensAttraction[org.ddahl.rscala.RObject]" => new Sampler {
+          var _distribution = pm.asInstanceOf[org.ddahl.shallot.distribution.EwensAttraction[org.ddahl.rscala.RObject]]
+          def next() = {
+            _partition = AuxiliaryGibbsSampler(_partition, sm, _distribution, rdg)._1
+            if ( updateMass ) 
+              _distribution = monitorMass(MassSampler.gaussianRandomWalk(_distribution, _partition, massShape, massRate, massRWSD, rdg))
+            if ( updatePermutation ) {
+              _distribution = monitorPermutation(PermutationSampler.update(_distribution, _partition, k, rdg, Set()))
+            }
+            if ( updateTemperature ) {
+              _distribution = monitorTemperature(TemperatureSampler.gaussianRandomWalk(
+                                  _distribution, _partition, temperatureShape, temperatureRate, temperatureRWSD, rdg))
+            }
+          }
+          def hyperparameters = Array(_distribution.mass.value, _distribution.attraction.decay.temperature,
+                                      monitorMass.rate, monitorPermutation.rate, monitorTemperature.rate)
+          def labels = Array("mass","temperature","rate.mass","rate.permutation","rate.temperature")
+        }
+      case "org.ddahl.shallot.distribution.EwensPitman[org.ddahl.rscala.RObject]" => new Sampler {
+          var _distribution = pm.asInstanceOf[org.ddahl.shallot.distribution.EwensPitman[org.ddahl.rscala.RObject]]
+          def next() = {
+            _partition = AuxiliaryGibbsSampler(_partition, sm, _distribution, rdg)._1
+            if ( updateMass ) 
+              _distribution = monitorMass(MassSampler.gaussianRandomWalk(_distribution, _partition, massShape, massRate, massRWSD, rdg))
+            if ( updateDiscount ) {
+              _distribution = monitorDiscount(DiscountSampler.gaussianRandomWalk(
+                                  _distribution, _partition, discountShape1, discountShape2, discountRWSD, rdg))
+            }
+          }
+          def hyperparameters = Array(_distribution.mass.value, _distribution.discount.value, monitorMass.rate, monitorDiscount.rate)
+          def labels = Array("mass","discount","rate.mass","rate.discount")
+        }
+      case "org.ddahl.shallot.distribution.Ewens[org.ddahl.rscala.RObject]" => new Sampler {
+          var _distribution = pm.asInstanceOf[org.ddahl.shallot.distribution.Ewens[org.ddahl.rscala.RObject]]
+          def next() = {
+            _partition = AuxiliaryGibbsSampler(_partition, sm, _distribution, rdg)._1
+            if ( updateMass ) 
+              _distribution = monitorMass(MassSampler.gaussianRandomWalk(_distribution, _partition, massShape, massRate, massRWSD, rdg))
+          }
+          def hyperparameters = Array(_distribution.mass.value, monitorMass.rate)
+          def labels = Array("mass","rate.mass")
+        }
+      case _ => throw new IllegalArgumentException("Unknown partition distribution type.")
+    }
+    val samplesPartition = new scala.collection.mutable.ListBuffer[Partition[org.ddahl.rscala.RObject]]()
+    val samplesHyperparameters = new scala.collection.mutable.ListBuffer[Array[Double]]()
+    var counter = 0
+    for ( i <- 1 to nDraws ) {
+      sampler.next() // AuxiliaryGibbsSampler(partition, sm, pm, rdg)._1
+      samplesPartition       += sampler.partition
+      samplesHyperparameters += sampler.hyperparameters
+      if ( showProgressBar && ( 100*i % nDraws == 0 ) ) {
+        counter += 1
+        // R.eval("setTxtProgressBar(%-, %-)",progressBar,counter)
+      }
+    }
+    (samplesPartition.toList, samplesHyperparameters.toArray, sampler.labels)
+  '
+  sm <- .samplingModel(sampling.model)
+  pm <- .partitionModel(partition.model, sm)
+  p <- .labels2partition(partition, sm)
+  rdg <- s$rdg()
+  pb <- if ( progress.bar ) txtProgressBar(min=0, max=100, style=3) else NULL
+  full <- sampler(p,sm,pm,scalaType(pm),rdg,scalaPush(pb,s),progress.bar)
+  if ( progress.bar ) close(pb)
+  raw <- structure(list(ref=full$"_1"(), names=partition.model$names), class="shallot.samples.raw")
+  hyperparameters <- full$"_2"()
+  colnames(hyperparameters) <- full$"_3"()
+  hyperparameters <- as.data.frame(hyperparameters)
+  structure(list(raw=raw, hyperparameters=hyperparameters), class="shallot.samples.full")
+}
+
+
+
 .partitionModel <- function(x, samplingModel=.nullModel()) {
   if ( inherits(x,"shallot.distribution.ewens") ) {
     .ewens(x, samplingModel)
@@ -699,88 +835,76 @@ partition.pmf <- function(x) {
 
 
 
-# Serialize partitions to R.
-serializePartitions <- function(ref, names, as.matrix, sample.parameter) {
-  withParameters <- ( ! is.null(sample.parameter) ) && ( ref[['type']] != "List[org.ddahl.shallot.parameter.partition.Partition[Null]]" )
-  if ( withParameters ) {
-    zandp <- .partitionsToMatrixWithParameters(ref)
-    z <- zandp$"_1"()
-    colnames(z) <- names
-    p <- if ( withParameters && is.function(sample.parameter) ) apply(z,1,function(zz) lapply(1:max(zz),function(i) sample.parameter()))
-    else {
-      extractor <- function(x,i=0L) s(x=x) * 'x(i-1)'
-      pp <- zandp$"_2"()
-      n.draws <- nrow(z)
-      ppp <- vector(mode="list", length=n.draws)
-      for ( i in 1:n.draws ) {
-        ppp[[i]] <- sapply(extractor(pp,i), function(x) s$var(x), USE.NAMES=FALSE)
+
+# Sampling model
+sampling.model <- function(sample.parameter, log.density) {
+  
+}
+
+sampling.model <- function(sample.parameter, log.density) {
+  if ( ! is.function(sample.parameter) ) stop("'sample.parameter' should be a function.")
+  if ( length(formals(sample.parameter)) != 2 ) stop("'sample.parameter' should take two arguments named 'indices' and 'parameter'.")
+  if ( ! identical(names(formals(sample.parameter)),c("indices","parameter")) )
+    stop("'sample.parameter' should take two arguments named 'indices' and 'parameter'.")
+  if ( ! is.function(log.density) ) stop("'log.density' should be a function.")
+  if ( length(formals(log.density)) != 3 ) stop("'log.density' should take three arguments named 'i', 'indices', and 'parameter'.")
+  if ( ! identical(names(formals(log.density)),c("i","indices","parameter")) )
+    stop("'log.density' should take three arguments named 'i', 'indices', and 'parameter'.")
+  tryCatch(p <- sample.parameter(double(),double(1)), error=function(e) stop("'sample.parameter' should sample from the centering distribution when arguments are double(), double(1)."))
+  tryCatch(d <- log.density(1,I(1),p), error=function(e) stop("'log.density' should doesn't pass sanity check log.density(1,I(1),p)."))
+  if ( ( ! is.vector(d) ) || ( length(d) != 1 ) ) stop("'log.density' should return a numeric vector of length one.")
+  r <- list(sample.parameter=sample.parameter, log.density=log.density)
+  structure(r, class="shallot.distribution.data")
+}
+
+.samplingModel <- function(samplingModel) {
+  s ^ '
+    val sp = R.evalObject("samplingModel$sample.parameter")
+    val ld = R.evalObject("samplingModel$log.density")
+
+    new SamplingModel[org.ddahl.rscala.RObject] {
+
+      def logDensity(i: Int, subset: Subset[org.ddahl.rscala.RObject]): Double = {
+        R.evalD0("as.double(%-(%-, %-, %-))", ld, i+1, subset.toArray.map(_+1), subset.parameter)
       }
-      ppp
-    }
-  } else {
-    z <- .partitionsToMatrix(ref)
-    colnames(z) <- names
-    p <- NULL
-  }
-  if ( as.matrix) {
-    z <- z+1L
-    r <- list(labels=z,parameters=p)
-    list(partitions=structure(r, class="shallot.samples.labels"))
-  } else {
-    n.draws <- nrow(z)
-    r <- vector(mode="list", length=n.draws)
-    for ( i in 1:n.draws ) {
-      zz <- z[i,]
-      n.subsets <- max(zz)+1
-      rr <- vector(mode="list", length=n.subsets)
-      for ( j in 1:n.subsets ) {
-        items <- which(zz==j-1)
-        rr[[j]] <- if ( is.null(p) ) list(items=items, parameter=NULL)
-        else list(items=items,parameter=p[[i]][[j]])
+
+      def sample(subset: Subset[org.ddahl.rscala.RObject]): org.ddahl.rscala.RObject = {
+        R.evalObject("%-(%-, %-)", sp, subset.toArray.map(_+1), subset.parameter)
       }
-      r[[i]] <- rr
+
+      def sample(): org.ddahl.rscala.RObject = {
+        R.evalObject("%-()", sp)
+      }
+
     }
-    list(partitons=structure(r, class="shallot.samples.partition"))
-  }
+  '
 }
 
 
 
-
 # Process partitions that were sampled.
-process.samples <- function(x, as.matrix=TRUE, expand=FALSE, sample.parameter=FALSE) {
+process.samples <- function(x) {
+  if ( ( ! inherits(x,"shallot.samples.raw") ) && ( ! inherits(x,"shallot.samples.full") ) ) stop("'x' should be a result from the functions 'sample.partitions' or 'sample.partitions.posterior'.")
   if ( inherits(x,"shallot.samples.full") ) {
-    result <- process.samples(x$raw, as.matrix=as.matrix, expand=expand, sample.parameter=sample.parameter)
+    result <- scalaPull(x$raw$ref, "clustering", names=x$raw$names, withParameters=TRUE)
     result[['hyperparameters']] <- x$hyperparameters
-    return(result)
+  } else {
+    result <- scalaPull(x$ref, "clustering", names=x$names, withParameters=TRUE)
   }
-  if ( ! inherits(x,"shallot.samples.raw") ) stop("'x' should be a result from the functions 'sample.partition' or 'sample.partition.posterior'.")
-  result <- serializePartitions(x$ref, x$names, as.matrix, sample.parameter)
-  if ( expand ) {
-    if ( identical(sample.parameter,NULL) ) stop("'sample.parameter' may not be null when 'expand=TRUE'.")
-    if ( ! as.matrix ) stop("'expand=TRUE' is only valid when 'as.matrix=TRUE'.")
-    mega <- matrix(NA,nrow=nrow(result$partitions$labels),ncol=ncol(result$partitions$labels))
-    for ( i in 1:nrow(mega) ) {
-      rhs <- result$partitions$parameters[[i]]
-      if ( ! is.vector(rhs) ) stop("'expand=TRUE' is only valid when all the parameters are scalars.")
-      mega[i, ] <- rhs[result$partitions$labels[i,]]
-    }
-    colnames(mega) <- x$names
-    list(partitions=mega)
-  } else result
+  result
 }
 
 
 
 # Null sampling model
-.nullModel <- function() s$'.new_GeneralNullSamplingModel[PersistentReference]'()
+.nullModel <- function() s$'.new_GeneralNullSamplingModel[org.ddahl.rscala.RObject]'()
 
 
 
 # Pairwise Probabilities
-enumerate.partitions <- function(n.items, as.matrix=TRUE) {
-  ref <- s$.Partition.enumerate(.nullModel(),as.integer(n.items)[1])
-  serializePartitions(ref, NULL, as.matrix=as.matrix, sample.parameter=NULL)
+enumerate.partitions <- function(n.items) {
+  ref <- s$.Partition.enumerate(s ^ function() {}, as.integer(n.items)[1])
+  .partitionsToMatrix(ref)
 }
 
 
@@ -788,9 +912,9 @@ enumerate.partitions <- function(n.items, as.matrix=TRUE) {
 # Pairwise Probabilities
 pairwise.probabilities <- function(x, parallel=TRUE) {
   if ( inherits(x,"shallot.samples.full") ) x <- x$raw
-  if ( ! inherits(x,"shallot.samples.raw") ) stop("'x' should be a result from the functions 'sample.partition' or 'sample.partition.posterior'.")
+  if ( ! inherits(x,"shallot.samples.raw") ) stop("'x' should be a result from the functions 'sample.partitions' or 'sample.partitions.posterior'.")
   start.time <- proc.time()
-  ref <- s$.PairwiseProbability.apply(x$ref,as.logical(parallel))
+  ref <- s$.PairwiseProbability(x$ref,as.logical(parallel))
   result <- list(ref=ref,n.items=ref$nItems(),names=x$names,proc.time=proc.time()-start.time)
   structure(result, class="shallot.pairwiseProbability")
 }
@@ -808,9 +932,9 @@ as.matrix.shallot.pairwiseProbability <- function(x, ...) {
 # Estimate partition
 estimate.partition <- function(x, pairwise.probabilities=NULL, max.subsets=0, max.scans=0, parallel=TRUE) {
   if ( inherits(x,"shallot.samples.full") ) x <- x$raw
-  if ( ! inherits(x,"shallot.samples.raw") ) stop("'x' should be a result from the functions 'sample.partition' or 'sample.partition.posterior'.")
+  if ( ! inherits(x,"shallot.samples.raw") ) stop("'x' should be a result from the functions 'sample.partitions' or 'sample.partitions.posterior'.")
   if ( is.null(pairwise.probabilities) ) pairwise.probabilities <- pairwise.probabilities(x)
-  ref <- s$.MinBinder.apply(
+  ref <- s$.MinBinder(
       pairwise.probabilities$ref, x$ref, as.integer(max.subsets), as.integer(max.scans), as.logical(parallel))
   structure(ref$toLabels(), names=x$names)
 }
@@ -827,12 +951,4 @@ estimate.partition <- function(x, pairwise.probabilities=NULL, max.subsets=0, ma
   stop("Not yet implemented.")
 }
 
-latest <- function() {
-  install.packages('https://dahl.byu.edu/public/rscala_LATEST.tar.gz',repos=NULL,type='source')
-  install.packages('https://dahl.byu.edu/public/commonsMath_LATEST.tar.gz',repos=NULL,type='source')
-  install.packages('https://dahl.byu.edu/public/sdols_LATEST.tar.gz',repos=NULL,type='source')
-  install.packages('https://dahl.byu.edu/public/shallot_LATEST.tar.gz',repos=NULL,type='source')
-  cat("\n\n*******\n\nPlease restart your R session.\n\n*******\n")
-
-}
 
