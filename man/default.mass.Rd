@@ -31,10 +31,9 @@ mass value.}
 \item{temp}{temperature parameter of the Ewens-Pitman Attraction
 distribution.}
 
-\item{loss}{One of "\code{squaredError}", "\code{absoluteError}",
-"\code{binder}", or "\code{lowerBoundVariationOfInformation}" to indicate
-the optimization should seek to minimize squared error loss, absolute error
-loss, Binder loss (Binder 1978), or the lower bound of the variation of
+\item{loss}{One of \code{"binder"} or \code{"VI.lb"} to indicate
+the optimization should seek to minimize the expectation of the
+Binder loss (Binder 1978) or the lower bound of the expectation of the variation of
 information loss (Wade & Ghahramani 2017), respectively.}
 
 \item{n.draws}{number of draws of partitions to be obtained at each mass
@@ -66,7 +65,7 @@ Partition Distribtuions, using the Ewens-Pitman Attraction distribution.
 The function draws \code{n.draws} partitions at each specified mass value. If
 a vector of mass values is not given, then the default of
 \code{seq(0.1,10,0.2)} is used for loss
-\code{lowerBoundVariationOfInformation} and \code{seq(0.1,5,0.05)} used for
+\code{"VI.lb"} and \code{seq(0.1,5,0.05)} used for
 the other loss functions.
 
 If a list of expected pairwise allocation matrices (EPAM) is provided,
@@ -75,7 +74,7 @@ matrix. Additionally, no new draws are needed for estimation, if a list of
 EPAMs is provided.
 
 A partition/clustering estimate from each EPAM is obtained using the SALSO
-method in \code{\link[sdols]{salso}}. The estimate given minimizes the
+method in \code{\link[salso]{salso}}. The estimate given minimizes the
 specified \code{loss} function with respect to the EPAM.
 
 The function then uses the \code{\link{mass.algorithm}} to select the optimal

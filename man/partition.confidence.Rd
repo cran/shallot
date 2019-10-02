@@ -8,12 +8,15 @@ partition.confidence(x, y)
 }
 \arguments{
 \item{x}{If \code{y} is not specified then \code{x} must be an object of
-class \code{sdols.confidence}. Otherwise, \code{x} is a vector of cluster
+class \code{salso.confidence}. Otherwise, \code{x} is a vector of cluster
 labels and \code{y} is an expected pairwise allocation matrix.}
 
 \item{y}{If \code{y} is not specified then \code{x} must be an object of
-class \code{sdols.confidence}. Otherwise, \code{x} is a vector of cluster
+class \code{salso.confidence}. Otherwise, \code{x} is a vector of cluster
 labels and \code{y} is an expected pairwise allocation matrix.}
+}
+\value{
+A vector of partition confidences.
 }
 \description{
 This function calculates the partition confidence of a partition estimate
@@ -21,7 +24,7 @@ from the corresponding expected pairwise allocation matrix (EPAM).
 }
 \details{
 The \code{\link{partition.confidence}} takes as input an object of class
-\code{sdols.confidence} and then calculates the partition confidence from the
+\code{salso.confidence} and then calculates the partition confidence from the
 expected pairwise allocation matrix.
 
 The partition confidence is the average values of the EPAM for items that are

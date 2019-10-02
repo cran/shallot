@@ -8,8 +8,11 @@ variance.ratio(x, y)
 }
 \arguments{
 \item{x, y}{If \code{y} is not specified then \code{x} must be an object of
-class \code{sdols.confidence}. Otherwise, \code{x} is a vector of cluster
+class \code{salso.confidence}. Otherwise, \code{x} is a vector of cluster
 labels and \code{y} is an expected pairwise allocation matrix.}
+}
+\value{
+A vector of variance ratios.
 }
 \description{
 This function calculates the variance of the expected pairwise allocation
@@ -18,7 +21,7 @@ pairwise allocation matrix.
 }
 \details{
 The \code{\link{variance.ratio}} function takes as input an object of class
-\code{sdols.confidence} and calculates the variance ratio for the estimated
+\code{salso.confidence} and calculates the variance ratio for the estimated
 partition from the corresponding expected pairwise allocation matrix (EPAM).
 
 The variance ratio is the weighted average of the within cluster variances of

@@ -122,10 +122,10 @@ new session is started.
 #samples.format1$hyperparameters
 #
 ### Post processing to find the partition estimate.
-#library(sdols)
-#pp <- expectedPairwiseAllocationMatrix(samples.format1$labels)
+#library(salso)
+#pp <- psm(samples.format1$labels)
 #est <- salso(pp)
-#plot(confidence(est,pp))
+#plot(confidence(est$estimate,pp))
 #\dontshow{
 #rscala::scalaDisconnect(shallot:::s)
 #}
