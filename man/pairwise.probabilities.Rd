@@ -16,8 +16,6 @@ pairwise.probabilities(x, parallel = TRUE)
 
 \item{parallel}{Should all of the CPU cores should be used?  Defaults to
 \code{TRUE}.}
-
-\item{...}{Currently ignored.}
 }
 \value{
 The \code{\link{pairwise.probabilities}} function returns an object

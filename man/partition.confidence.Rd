@@ -39,8 +39,9 @@ partition.confidence(x,y)
 
 }
 \seealso{
-Other Default Mass Selection: \code{\link{default.mass}},
-  \code{\link{mass.algorithm}},
-  \code{\link{variance.ratio}}
+Other Default Mass Selection: 
+\code{\link{default.mass}()},
+\code{\link{mass.algorithm}()},
+\code{\link{variance.ratio}()}
 }
 \concept{Default Mass Selection}

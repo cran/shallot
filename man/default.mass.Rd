@@ -5,9 +5,19 @@
 \alias{print.shallot.default.mass}
 \title{Default Mass Selection}
 \usage{
-default.mass(mass, list.epam, dis, new.draws = TRUE, w = c(1, 1, 1),
-  discount = 0, temp = 10, loss = "binder", n.draws = 100L,
-  two.stage = TRUE, parallel = TRUE)
+default.mass(
+  mass,
+  list.epam,
+  dis,
+  new.draws = TRUE,
+  w = c(1, 1, 1),
+  discount = 0,
+  temp = 10,
+  loss = "binder",
+  n.draws = 100L,
+  two.stage = TRUE,
+  parallel = TRUE
+)
 
 \method{print}{shallot.default.mass}(x, ...)
 }
@@ -81,8 +91,9 @@ The function then uses the \code{\link{mass.algorithm}} to select the optimal
 mass value for clustering estimation.
 }
 \seealso{
-Other Default Mass Selection: \code{\link{mass.algorithm}},
-  \code{\link{partition.confidence}},
-  \code{\link{variance.ratio}}
+Other Default Mass Selection: 
+\code{\link{mass.algorithm}()},
+\code{\link{partition.confidence}()},
+\code{\link{variance.ratio}()}
 }
 \concept{Default Mass Selection}

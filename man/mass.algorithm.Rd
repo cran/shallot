@@ -54,8 +54,9 @@ weigthed sum of \eqn{w_1 pc_i + w_2 vr_i + w_3 n_i} from among the selected
 indices. }
 }
 \seealso{
-Other Default Mass Selection: \code{\link{default.mass}},
-  \code{\link{partition.confidence}},
-  \code{\link{variance.ratio}}
+Other Default Mass Selection: 
+\code{\link{default.mass}()},
+\code{\link{partition.confidence}()},
+\code{\link{variance.ratio}()}
 }
 \concept{Default Mass Selection}

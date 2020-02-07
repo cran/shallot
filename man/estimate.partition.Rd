@@ -4,8 +4,13 @@
 \alias{estimate.partition}
 \title{Estimate Partition}
 \usage{
-estimate.partition(x, pairwise.probabilities = NULL, max.subsets = 0,
-  max.scans = 0, parallel = TRUE)
+estimate.partition(
+  x,
+  pairwise.probabilities = NULL,
+  max.subsets = 0,
+  max.scans = 0,
+  parallel = TRUE
+)
 }
 \arguments{
 \item{x}{An object from the \code{\link{sample.partitions}} function.}

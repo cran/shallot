@@ -36,8 +36,9 @@ variance.ratio(x,y)
 
 }
 \seealso{
-Other Default Mass Selection: \code{\link{default.mass}},
-  \code{\link{mass.algorithm}},
-  \code{\link{partition.confidence}}
+Other Default Mass Selection: 
+\code{\link{default.mass}()},
+\code{\link{mass.algorithm}()},
+\code{\link{partition.confidence}()}
 }
 \concept{Default Mass Selection}

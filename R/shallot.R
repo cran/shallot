@@ -169,7 +169,7 @@ discount <- function(...,fixed=TRUE) {
 
 .discountFactory <- function(discount) {
   if ( discount$fixed ) s$Discount.factory(discount$value)
-  else s$Discount.factory(discount$shape,discount$rate,s$rdg())
+  else s$Discount.factory(discount$shape1,discount$shape2,s$rdg())
 }
 
 #' @rdname mass
@@ -728,7 +728,6 @@ print.shallot.distribution.ddcrp <- function(x, ...) {
 #' @param x An object of class \code{shallot.distribution}.
 #' @param n.samples An integer containing the number of samples.
 #' @param n.subsets An integer containing the number of subsets.
-#' @param ... Currently ignored.
 #' @return The \code{\link{nsubsets.random}} function returns a vector of
 #' random samples of the number of subsets in the distribution \var{x}.
 #' 
@@ -954,7 +953,6 @@ nsubsets.variance <- function(x) {
 #' to parallelization, slightly more samples may be returned.
 #' @param parallel Should sampling be done in parallel by simultaneously using
 #' all CPU cores?
-#' @param ... Currently ignored.
 #' @return An object of class \code{shallot.samples.raw} which can be
 #' subsequently be used in \code{\link{process.samples}},
 #' \code{\link{pairwise.probabilities}}, \code{\link{estimate.partition}},
@@ -964,7 +962,7 @@ nsubsets.variance <- function(x) {
 #' @author David B. Dahl \email{dahl@@stat.byu.edu}
 #' @seealso \code{\link{partition.distribution}},
 #' \code{\link{process.samples}}, \code{\link{pairwise.probabilities}},
-#' \code{\link{estimate.partition}} \code{\link{sample.partitions.posterior}}
+#' \code{\link{estimate.partition}}
 #' @examples
 #' 
 #' \dontrun{
@@ -1037,6 +1035,7 @@ print.shallot.samples.full <- function(x, ...) {
 #' @seealso \code{\link{partition.distribution}},
 #' \code{\link{process.samples}}, \code{\link{pairwise.probabilities}},
 #' \code{\link{estimate.partition}} \code{\link{sample.partitions}}
+#' @noRd
 #' @examples
 #' 
 #' 1+2
@@ -1065,7 +1064,7 @@ print.shallot.samples.full <- function(x, ...) {
 #' #s02Inv <- 1.0 / s02
 #' #c <- -1.0 / (2.0 * s2)
 #' #
-#' ### Sampling model of Neal (JCGS, 2009)
+#' ### Sampling model of Neal (JCGS, 2000)
 #' ### Function to perform an MCMC update of the parameter.
 #' #sample.parameter <- function(indices=scalaType("D1"), parameter=scalaType("D0")) {
 #' #  sum <- sum(data[indices])
@@ -1452,7 +1451,6 @@ process.samples <- function(x) {
 #' \code{\link{as.matrix}}.
 #' @param parallel Should all of the CPU cores should be used?  Defaults to
 #' \code{TRUE}.
-#' @param ... Currently ignored.
 #' @return The \code{\link{pairwise.probabilities}} function returns an object
 #' of class \code{shallot.pairwiseProbability}.
 #' 

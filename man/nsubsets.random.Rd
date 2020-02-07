@@ -21,8 +21,6 @@ nsubsets.variance(x)
 \item{n.samples}{An integer containing the number of samples.}
 
 \item{n.subsets}{An integer containing the number of subsets.}
-
-\item{...}{Currently ignored.}
 }
 \value{
 The \code{\link{nsubsets.random}} function returns a vector of

@@ -16,8 +16,6 @@ to parallelization, slightly more samples may be returned.}
 
 \item{parallel}{Should sampling be done in parallel by simultaneously using
 all CPU cores?}
-
-\item{...}{Currently ignored.}
 }
 \value{
 An object of class \code{shallot.samples.raw} which can be
@@ -43,7 +41,7 @@ example(shallot)
 \seealso{
 \code{\link{partition.distribution}},
 \code{\link{process.samples}}, \code{\link{pairwise.probabilities}},
-\code{\link{estimate.partition}} \code{\link{sample.partitions.posterior}}
+\code{\link{estimate.partition}}
 }
 \author{
 David B. Dahl \email{dahl@stat.byu.edu}
