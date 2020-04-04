@@ -19,8 +19,7 @@ all CPU cores?}
 }
 \value{
 An object of class \code{shallot.samples.raw} which can be
-subsequently be used in \code{\link{process.samples}},
-\code{\link{pairwise.probabilities}}, \code{\link{estimate.partition}},
+subsequently be used in \code{\link{process.samples}}.
 }
 \description{
 This function samples partitions from the Ewens, Ewens-Pitman, Ewens
@@ -40,8 +39,7 @@ example(shallot)
 }
 \seealso{
 \code{\link{partition.distribution}},
-\code{\link{process.samples}}, \code{\link{pairwise.probabilities}},
-\code{\link{estimate.partition}}
+\code{\link{process.samples}}
 }
 \author{
 David B. Dahl \email{dahl@stat.byu.edu}

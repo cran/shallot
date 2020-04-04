@@ -54,7 +54,7 @@ Association}, 112, 721-732. <DOI:10.1080/01621459.2016.1165103>}
 }
 \seealso{
 \code{\link{ewens.pitman.attraction}},
-\code{\link{sample.partitions}}, \code{\link{estimate.partition}}
+\code{\link{sample.partitions}}
 }
 \author{
 David B. Dahl \email{dahl@stat.byu.edu}
